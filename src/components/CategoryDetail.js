@@ -3,11 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 
 const CategoryDetail = ({ repositories }) => {
   const { category } = useParams();
-  const filteredRepos = repositories.filter(repo => repo.category === category);
+  const filteredRepos = repositories.filter(repo => repo.language === category);
 
   return (
     <div>
-      <h2>Category: {category}</h2>
+      <h2>Language: {category}</h2>
       <ul>
         {filteredRepos.map(repo => (
           <li key={repo.id}>

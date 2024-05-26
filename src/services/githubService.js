@@ -6,13 +6,13 @@ const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
 
 let cache = {};
 let requestCount = 0;
-const MAX_REQUESTS_PER_HOUR = 5000;
+const MAX_REQUESTS_PER_HOUR = 500;//5000;
 
 const octokit = new Octokit({
   auth: GITHUB_TOKEN
 });
 
-export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 30, page = 1) => {
+export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 300, page = 1) => {
   const cacheKey = `popularRepos:${starsThreshold}:${perPage}:${page}`;
   if (cache[cacheKey]) {
     console.log('Returning cached data for', cacheKey);

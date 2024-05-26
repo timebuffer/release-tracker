@@ -7,8 +7,11 @@ import CategoryDetail from './components/CategoryDetail';
 import { fetchPopularRepositories } from './services/githubService';
 import './App.css';
 
+
 const App = () => {
   const [repositories, setRepositories] = useState([]);
+
+  
 
   const handleFetchedRepositories = (repos) => {
     setRepositories(repos);
@@ -42,6 +45,8 @@ const App = () => {
     // Fetch repositories and set state here
     // setRepositories(fetchedRepositories);
   }, []);
+
+  
 
   return (
     <Router>

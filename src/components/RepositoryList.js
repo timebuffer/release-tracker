@@ -13,7 +13,6 @@ const RepositoryList = () => {
   const [loading, setLoading] = useState(false);
 
   
-
   useEffect(() => {
     const fetchRepos = async () => {
       try {
@@ -86,6 +85,25 @@ const RepositoryList = () => {
       {loading ? <div>Loading...</div> : <button onClick={loadMore}>Load More</button>}
     </div>
   );
+  */
+
+  /*
+    import { Link } from 'react-router-dom';
+
+        const RepositoryList = ({ repositories }) => {
+        return (
+            <div>
+            <h2>Popular Repositories</h2>
+            <ul>
+                {repositories.map(repo => (
+                <li key={repo.id}>
+                    <Link to={`/repository/${repo.owner.login}/${repo.name}`}>{repo.name}</Link> - {repo.description}
+                </li>
+                ))}
+            </ul>
+            </div>
+        );
+        };  
   */
 
   return (
