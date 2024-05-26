@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Octokit } from '@octokit/rest';
 
 const GITHUB_API_BASE_URL = 'https://api.github.com';
 const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
@@ -7,9 +8,14 @@ let cache = {};
 let requestCount = 0;
 const MAX_REQUESTS_PER_HOUR = 5000;
 
+const octokit = new Octokit({
+  auth: GITHUB_TOKEN
+});
+
 export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 30, page = 1) => {
   const cacheKey = `popularRepos:${starsThreshold}:${perPage}:${page}`;
   if (cache[cacheKey]) {
+    console.log('Returning cached data for', cacheKey);
     return cache[cacheKey];
   }
 
@@ -18,6 +24,7 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
   }
 
   try {
+    console.log(`Fetching popular repositories: page ${page}`);
     const response = await axios.get(`${GITHUB_API_BASE_URL}/search/repositories`, {
       params: {
         q: `stars:>${starsThreshold}`,
@@ -33,6 +40,7 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
 
     requestCount++;
     cache[cacheKey] = response.data.items;
+    console.log('Fetched repositories:', response.data.items);
     return response.data.items;
   } catch (error) {
     console.error('Error fetching repositories:', error);
@@ -43,6 +51,7 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
 export const fetchReleases = async (repoFullName) => {
   const cacheKey = `releases:${repoFullName}`;
   if (cache[cacheKey]) {
+    console.log('Returning cached data for', cacheKey);
     return cache[cacheKey];
   }
 
@@ -51,6 +60,7 @@ export const fetchReleases = async (repoFullName) => {
   }
 
   try {
+    console.log(`Fetching releases for ${repoFullName}`);
     const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repoFullName}/releases`, {
       headers: {
         Authorization: `token ${GITHUB_TOKEN}`
@@ -59,10 +69,67 @@ export const fetchReleases = async (repoFullName) => {
 
     requestCount++;
     cache[cacheKey] = response.data;
+    console.log('Fetched releases:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching releases:', error);
     return [];
+  }
+};
+
+export const fetchCommitEmails = async (owner, repo, releaseTag) => {
+  try {
+    let commits;
+
+    if (releaseTag) {
+      // Fetch commits associated with the release
+      const { data: release } = await octokit.repos.getReleaseByTag({
+        owner,
+        repo,
+        tag: releaseTag,
+      });
+
+      const base = release.target_commitish;
+      const { data: compare } = await octokit.repos.compareCommits({
+        owner,
+        repo,
+        base,
+        head: releaseTag,
+      });
+
+      commits = compare.commits;
+    } else {
+      // Fetch the latest commits
+      const { data } = await octokit.repos.listCommits({
+        owner,
+        repo,
+        per_page: 30, // Adjust the number of commits to fetch per page
+      });
+      commits = data;
+    }
+
+    return commits.map(commit => ({
+      sha: commit.sha,
+      author: commit.commit.author.name,
+      email: commit.commit.author.email,
+      message: commit.commit.message,
+    }));
+  } catch (error) {
+    console.error('Error fetching commit emails:', error);
+    return [];
+  }
+};
+
+export const fetchRepositoryDetails = async (owner, repo) => {
+  try {
+    const { data } = await octokit.repos.get({
+      owner,
+      repo,
+    });
+    return data;
+  } catch (error) {
+    console.error('Error fetching repository details:', error);
+    return null;
   }
 };
 
