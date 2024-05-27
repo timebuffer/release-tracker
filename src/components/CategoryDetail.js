@@ -4,6 +4,8 @@ import { useParams, Link } from 'react-router-dom';
 const CategoryDetail = ({ repositories }) => {
   const { category } = useParams();
   const filteredRepos = repositories.filter(repo => repo.language === category);
+  
+  
 
   return (
     <div>

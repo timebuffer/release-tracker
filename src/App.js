@@ -12,7 +12,6 @@ const App = () => {
   const [repositories, setRepositories] = useState([]);
 
   
-
   const handleFetchedRepositories = (repos) => {
     setRepositories(repos);
   };
@@ -45,9 +44,8 @@ const App = () => {
     // Fetch repositories and set state here
     // setRepositories(fetchedRepositories);
   }, []);
-
   
-
+  
   return (
     <Router>
       <div className="App">

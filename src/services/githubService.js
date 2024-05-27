@@ -6,13 +6,13 @@ const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
 
 let cache = {};
 let requestCount = 0;
-const MAX_REQUESTS_PER_HOUR = 500;//5000;
+const MAX_REQUESTS_PER_HOUR = 300;//5000;
 
 const octokit = new Octokit({
   auth: GITHUB_TOKEN
 });
 
-export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 300, page = 1) => {
+export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 200, page = 1) => {
   const cacheKey = `popularRepos:${starsThreshold}:${perPage}:${page}`;
   if (cache[cacheKey]) {
     console.log('Returning cached data for', cacheKey);
@@ -39,9 +39,28 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
     });
 
     requestCount++;
-    cache[cacheKey] = response.data.items;
-    console.log('Fetched repositories:', response.data.items);
-    return response.data.items;
+    const repos = response.data.items;
+
+    // Fetch topics for each repository
+    const reposWithTopics = await Promise.all(repos.map(async repo => {
+      try {
+        const topicsResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repo.owner.login}/${repo.name}/topics`, {
+          headers: {
+            Accept: 'application/vnd.github.mercy-preview+json',
+            Authorization: `token ${GITHUB_TOKEN}`
+          }
+        });
+        repo.topics = topicsResponse.data.names;
+      } catch (error) {
+        console.error(`Error fetching topics for ${repo.full_name}:`, error);
+        repo.topics = [];
+      }
+      return repo;
+    }));
+
+    cache[cacheKey] = reposWithTopics;
+    console.log('Fetched repositories with topics:', reposWithTopics);
+    return reposWithTopics;
   } catch (error) {
     console.error('Error fetching repositories:', error);
     return [];
@@ -119,6 +138,7 @@ export const fetchCommitEmails = async (owner, repo, releaseTag) => {
     return [];
   }
 };
+
 
 export const fetchRepositoryDetails = async (owner, repo) => {
   try {

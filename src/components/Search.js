@@ -17,8 +17,12 @@ const Search = ({ repositories }) => {
       if (repo.name) names.add(repo.name);
     });
 
-    const languageOptions = Array.from(languages).slice(0, 5).map(language => ({ label: language, value: language, type: 'language' }));
-    const nameOptions = Array.from(names).slice(0, 5).map(name => ({ label: name, value: name, type: 'name' }));
+    //const languageOptions = Array.from(languages).slice(0, 5).map(language => ({ label: language, value: language, type: 'language' }));
+    //const nameOptions = Array.from(names).slice(0, 5).map(name => ({ label: name, value: name, type: 'name' }));
+
+    const languageOptions = Array.from(languages).slice(0, 10).map(language => ({ label: language, value: language, type: 'language' }));
+    const nameOptions = Array.from(names).slice(0, 10).map(name => ({ label: name, value: name, type: 'name' }));
+
 
     setOptions([
       { label: 'Names', options: nameOptions },

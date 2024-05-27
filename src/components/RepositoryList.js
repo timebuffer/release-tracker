@@ -16,7 +16,7 @@ const RepositoryList = () => {
   useEffect(() => {
     const fetchRepos = async () => {
       try {
-        const repos = await fetchPopularRepositories(10000, 30, page);
+        const repos = await fetchPopularRepositories(10000, 300, page);
         setRepositories(prevRepos => {
           const newRepos = repos.filter(repo => !prevRepos.some(prevRepo => prevRepo.id === repo.id));
           return [...prevRepos, ...newRepos];
@@ -65,7 +65,7 @@ const RepositoryList = () => {
 
   const loadMore = async () => {
     setLoading(true);
-    const moreRepos = await fetchPopularRepositories(10000, 30, page + 1);
+    const moreRepos = await fetchPopularRepositories(10000, 300, page + 1);
     setRepositories([...repositories, ...moreRepos]);
     setPage(page + 1);
     //setPage(prevPage => prevPage + 1);
