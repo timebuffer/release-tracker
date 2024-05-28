@@ -1,16 +1,25 @@
 import axios from 'axios';
 import { Octokit } from '@octokit/rest';
 
-const GITHUB_API_BASE_URL = 'https://api.github.com';
+
+const GITHUB_API_BASE_URL  = process.env.REACT_APP_API_URL || 'https://api.github.com';
+
+// other code using baseUrl
+
 const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
+//const logger = require('./logger'); // Import the logger
 
 let cache = {};
 let requestCount = 0;
-const MAX_REQUESTS_PER_HOUR = 300;//5000;
+const MAX_REQUESTS_PER_HOUR = 200;//5000;
 
 const octokit = new Octokit({
   auth: GITHUB_TOKEN
 });
+
+const logRequest = (url, params) => {
+  //logger.info(`Request made to ${url} with params: ${JSON.stringify(params)}`);
+};
 
 export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 200, page = 1) => {
   const cacheKey = `popularRepos:${starsThreshold}:${perPage}:${page}`;
@@ -24,33 +33,67 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
   }
 
   try {
+    
+
+    const url = `${GITHUB_API_BASE_URL}/search/repositories`;
+    
+
+
+
     console.log(`Fetching popular repositories: page ${page}`);
     const response = await axios.get(`${GITHUB_API_BASE_URL}/search/repositories`, {
       params: {
         q: `stars:>${starsThreshold}`,
         sort: 'stars',
         order: 'desc',
-        per_page: perPage,
-        page: page,
+        per_page: 200,
+        page: 1,
       },
       headers: {
-        Authorization: `token ${GITHUB_TOKEN}`
-      }
+        Authorization: `token ${GITHUB_TOKEN}`,
+      },
     });
 
-    requestCount++;
+    incrementRequestCount();
+
+    const rateLimit = response.headers['x-ratelimit-limit'];
+    const rateLimitRemaining = response.headers['x-ratelimit-remaining'];
+    const rateLimitReset = response.headers['x-ratelimit-reset'];
+
+    console.log(`Rate Limit: ${rateLimit}`);
+    console.log(`Rate Limit Remaining: ${rateLimitRemaining}`);
+    console.log(`Rate Limit Reset: ${new Date(rateLimitReset * 1000).toLocaleString()}`);
+
+    if (rateLimitRemaining === 0) {
+      console.warn('Rate limit exceeded. Please wait until it resets.');
+    }
+
+    return response.data.items;
     const repos = response.data.items;
 
     // Fetch topics for each repository
-    const reposWithTopics = await Promise.all(repos.map(async repo => {
+    /*const reposWithTopics = await Promise.all(repos.map(async repo => {
       try {
+        
+        const topicsUrl = `${GITHUB_API_BASE_URL}/repos/${repo.owner.login}/${repo.name}/topics`;
+        const topicsParams = {};
+
+        logRequest(topicsUrl, topicsParams); // Log the topics request
+        
         const topicsResponse = await axios.get(`${GITHUB_API_BASE_URL}/repos/${repo.owner.login}/${repo.name}/topics`, {
           headers: {
             Accept: 'application/vnd.github.mercy-preview+json',
             Authorization: `token ${GITHUB_TOKEN}`
           }
         });
-        repo.topics = topicsResponse.data.names;
+
+        if (topicsResponse && topicsResponse.data) {
+          repo.topics = topicsResponse.data.names;
+          console.log(topicsResponse.data);
+        } else {
+          console.error(`Invalid response for ${repo.full_name}:`, topicsResponse);
+          repo.topics = [];
+        }
       } catch (error) {
         console.error(`Error fetching topics for ${repo.full_name}:`, error);
         repo.topics = [];
@@ -59,11 +102,18 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
     }));
 
     cache[cacheKey] = reposWithTopics;
-    console.log('Fetched repositories with topics:', reposWithTopics);
+    console.log('Fetched repositories with topics:', reposWithTopics);*/
     return reposWithTopics;
   } catch (error) {
     console.error('Error fetching repositories:', error);
     return [];
+  }
+};
+
+const incrementRequestCount = () => {
+  requestCount++;
+  if (requestCount >= MAX_REQUESTS_PER_HOUR) {
+    throw new Error('Rate limit exceeded. Please try again later.');
   }
 };
 
