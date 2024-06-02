@@ -125,7 +125,7 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
 
 export const sendLogToServer = async (level, logMessage) => {
   try {
-    await axios.post('http://log.dev.timebuffer.io/log', {
+    await axios.post('http://log.dev.timebuffer.io/github-release-tracker', {
       level,
       message: logMessage,
     }, {
