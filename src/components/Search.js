@@ -8,6 +8,8 @@ const Search = ({ repositories }) => {
   const [inputValue, setInputValue] = useState('');
   const navigate = useNavigate();
 
+  console.log(repositories);
+  
   useEffect(() => {
     const languages = new Set();
     const names = new Set();

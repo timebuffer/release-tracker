@@ -55,7 +55,7 @@ const App = () => {
         </header>
         <main>
           <Routes>
-            <Route path="/repository/:owner/:repo" element={<RepositoryDetail />} />
+            <Route path="/repository/:owner/:repo" element={<RepositoryDetail repositories={ repositories}/> } />
             <Route path="/category/:category" element={<CategoryDetail repositories={repositories} />} />
           </Routes>
         </main>

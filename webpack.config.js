@@ -54,6 +54,7 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env': JSON.stringify({
         NODE_ENV: process.env.NODE_ENV || 'development',
+        REACT_APP_API_URL: process.env.REACT_APP_API_URL,
         REACT_APP_GITHUB_TOKEN: process.env.REACT_APP_GITHUB_TOKEN,
       }),
     }),

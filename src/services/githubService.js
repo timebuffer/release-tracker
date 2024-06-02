@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { Octokit } from '@octokit/rest';
 
 
@@ -7,7 +8,7 @@ const GITHUB_API_BASE_URL  = process.env.REACT_APP_API_URL || 'https://api.githu
 // other code using baseUrl
 
 const GITHUB_TOKEN = process.env.REACT_APP_GITHUB_TOKEN;
-//const logger = require('./logger'); // Import the logger
+const logger = require('./logger'); // Import the logger
 
 let cache = {};
 let requestCount = 0;
@@ -20,6 +21,8 @@ const octokit = new Octokit({
 const logRequest = (url, params) => {
   //logger.info(`Request made to ${url} with params: ${JSON.stringify(params)}`);
 };
+
+
 
 export const fetchPopularRepositories = async (starsThreshold = 10000, perPage = 200, page = 1) => {
   const cacheKey = `popularRepos:${starsThreshold}:${perPage}:${page}`;
@@ -40,7 +43,9 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
 
 
 
-    console.log(`Fetching popular repositories: page ${page}`);
+    //console.log(`Fetching popular repositories: page ${page}`); //${GITHUB_API_BASE_URL}/
+    //logger.info(`Fetching repositories with stars > ${starsThreshold}`);
+    
     const response = await axios.get(`${GITHUB_API_BASE_URL}/search/repositories`, {
       params: {
         q: `stars:>${starsThreshold}`,
@@ -67,6 +72,9 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
     if (rateLimitRemaining === 0) {
       console.warn('Rate limit exceeded. Please wait until it resets.');
     }
+    //logger.info(`Fetched ${response.data.items.length} repositories`);
+    //logger.info("test");
+    sendLogToServer('info', "wtf");
 
     return response.data.items;
     const repos = response.data.items;
@@ -107,6 +115,26 @@ export const fetchPopularRepositories = async (starsThreshold = 10000, perPage =
   } catch (error) {
     console.error('Error fetching repositories:', error);
     return [];
+  }
+};
+
+/*const sendLogToServer = (level, message) => {
+  axios.post('http://localhost:5001/log', { level, message })
+    .catch(err => console.error('Error sending log to server:', err));
+};*/
+
+export const sendLogToServer = async (level, logMessage) => {
+  try {
+    await axios.post('http://log.dev.timebuffer.io/log', {
+      level,
+      message: logMessage,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error sending log to server:', error);
   }
 };
 
